@@ -16,35 +16,9 @@ local state = {
 local function log(message)
     if config.enableLogging then
         local timestamp = textutils.formatTime(os.time(), false)
-        print("[" .. timestamp .. "] " .. message)
-    end
-end
-
--- Function to detect growth stage based on redstone input
-local function detectStage(side, maxStage)
-    local input = redstone.getInput(side)
-    
-    if not input then
-        return 0
-    end
-    
-    -- Get analog signal strength (0-15)
-    local strength = redstone.getAnalogInput(side)
-    
-    -- Map signal strength to growth stages
-    -- You may need to adjust this logic based on actual observer behavior
-    if strength == 0 then
-        return 0
-    elseif strength >= config.thresholds.stage4 and maxStage >= 4 then
-        return 4
-    elseif strength >= config.thresholds.stage3 and maxStage >= 3 then
-        return 3
-    elseif strength >= config.thresholds.stage2 and maxStage >= 2 then
-        return 2
-    elseif strength >= config.thresholds.stage1 then
-        return 1
-    else
-        return 0
+        term.setCursorPos(1, 18)
+        term.clearLine()
+        write("[" .. timestamp .. "] " .. message)
     end
 end
 
@@ -54,52 +28,66 @@ local function updateDisplay()
         return
     end
     
-    term.clear()
     term.setCursorPos(1, 1)
     
-    print("===========================")
+    term.clearLine()
+    print("============================")
+    term.clearLine()
     print(" Certus Quartz Farm Monitor")
-    print("===========================")
+    term.clearLine()
+    print("============================")
+    term.clearLine()
     print("")
+    term.clearLine()
     print("Left Crystal:  Stage " .. state.leftStage .. "/" .. config.crystalMaxStage)
+    term.clearLine()
     print("Right Crystal: Stage " .. state.rightStage .. "/" .. config.crystalMaxStage)
+    term.clearLine()
     print("Main Block:    Stage " .. state.mainStage .. "/" .. config.mainMaxStage)
+    term.clearLine()
     print("")
-    print("---------------------------")
+    term.clearLine()
+    print("----------------------------")
+    term.clearLine()
     print("Press Ctrl+T to exit")
-    print("---------------------------")
+    term.clearLine()
+    print("----------------------------")
     
     -- Visual progress bars
+    term.clearLine()
     print("")
-    print("Left:  " .. string.rep("█", state.leftStage) .. string.rep("░", config.crystalMaxStage - state.leftStage))
-    print("Right: " .. string.rep("█", state.rightStage) .. string.rep("░", config.crystalMaxStage - state.rightStage))
-    print("Main:  " .. string.rep("█", state.mainStage) .. string.rep("░", config.mainMaxStage - state.mainStage))
+    term.clearLine()
+    print("Left:  " .. string.rep("#", state.leftStage) .. string.rep("-", config.crystalMaxStage - state.leftStage))
+    term.clearLine()
+    print("Right: " .. string.rep("#", state.rightStage) .. string.rep("-", config.crystalMaxStage - state.rightStage))
+    term.clearLine()
+    print("Main:  " .. string.rep("#", state.mainStage) .. string.rep("-", config.mainMaxStage - state.mainStage))
 end
 
--- Function to check all growth stages
-local function checkGrowth()
-    local leftStage = detectStage(config.leftSide, config.crystalMaxStage)
-    local rightStage = detectStage(config.rightSide, config.crystalMaxStage)
-    local mainStage = detectStage(config.mainSide, config.mainMaxStage)
-    
-    -- Check for changes
+-- Function to handle redstone events (observer pulses)
+local function handleRedstoneChange(side)
     local changed = false
     
-    if leftStage ~= state.leftStage then
-        log("Left crystal: Stage " .. state.leftStage .. " -> " .. leftStage)
-        state.leftStage = leftStage
+    if side == config.leftSide then
+        state.leftStage = state.leftStage + 1
+        if state.leftStage > config.crystalMaxStage then
+            state.leftStage = config.crystalMaxStage
+        end
+        log("Left crystal grew to stage " .. state.leftStage)
         changed = true
-    end
-    
-    if rightStage ~= state.rightStage then
-        log("Right crystal: Stage " .. state.rightStage .. " -> " .. rightStage)
-        state.rightStage = rightStage
+    elseif side == config.rightSide then
+        state.rightStage = state.rightStage + 1
+        if state.rightStage > config.crystalMaxStage then
+            state.rightStage = config.crystalMaxStage
+        end
+        log("Right crystal grew to stage " .. state.rightStage)
         changed = true
-    end
-    
-    if mainStage ~= state.mainStage then
-        log("Main block: Stage " .. state.mainStage .. " -> " .. mainStage)
-        state.mainStage = mainStage
+    elseif side == config.mainSide then
+        state.mainStage = state.mainStage + 1
+        if state.mainStage > config.mainMaxStage then
+            state.mainStage = config.mainMaxStage
+        end
+        log("Main block grew to stage " .. state.mainStage)
         changed = true
     end
     
@@ -109,24 +97,24 @@ end
 -- Main monitoring loop
 local function main()
     term.clear()
-    log("Starting Certus Quartz Farm Monitor...")
-    log("Monitoring sides - Left: " .. config.leftSide .. ", Right: " .. config.rightSide .. ", Main: " .. config.mainSide)
     
     -- Initial display
     updateDisplay()
     
+    term.setCursorPos(1, 17)
+    write("Waiting for observer pulses...")
+    
     while true do
-        -- Check for growth changes
-        local changed = checkGrowth()
+        -- Wait for redstone event (observer pulse)
+        local event, side = os.pullEvent("redstone")
         
-        -- Update display if something changed or periodically
-        if changed or (os.epoch("utc") - state.lastUpdate) > 5000 then
+        -- Check if this side has an observer
+        local changed = handleRedstoneChange(side)
+        
+        -- Update display if something changed
+        if changed then
             updateDisplay()
-            state.lastUpdate = os.epoch("utc")
         end
-        
-        -- Wait before next check
-        sleep(config.checkInterval)
     end
 end
 
