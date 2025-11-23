@@ -1,15 +1,20 @@
 -- Certus Quartz Farm Monitor
--- Monitors crystal growth stages using CC:Tweaked and redstone
+-- Monitors crystal growth stages using CC:Tweaked and redstone relay
 
 -- Load configuration
 local config = require("config")
+
+-- Wrap the redstone relay peripheral
+local relay = peripheral.wrap(config.relayName)
+if not relay then
+    error("Could not wrap relay: " .. config.relayName)
+end
 
 -- State tracking
 local state = {
     leftStage = 0,
     rightStage = 0,
-    mainStage = 0,
-    lastUpdate = os.epoch("utc")
+    mainStage = 0
 }
 
 -- Function to log messages
@@ -64,30 +69,38 @@ local function updateDisplay()
     print("Main:  " .. string.rep("#", state.mainStage) .. string.rep("-", config.mainMaxStage - state.mainStage))
 end
 
+-- Function to clamp values
+local function clamp(n, max)
+    return math.min(max, math.max(0, n))
+end
+
 -- Function to handle redstone events (observer pulses)
-local function handleRedstoneChange(side)
+local function handleRedstoneChange()
     local changed = false
     
-    if side == config.leftSide then
-        state.leftStage = state.leftStage + 1
-        if state.leftStage > config.crystalMaxStage then
-            state.leftStage = config.crystalMaxStage
-        end
-        log("Left crystal grew to stage " .. state.leftStage)
+    -- Check relay inputs for pulses
+    local leftSig = relay.getInput(config.leftSide)
+    local rightSig = relay.getInput(config.rightSide)
+    local mainSig = relay.getInput(config.mainSide)
+    
+    -- Left crystal
+    if leftSig then
+        state.leftStage = clamp(state.leftStage + 1, config.crystalMaxStage)
+        log("Left crystal: Stage " .. state.leftStage)
         changed = true
-    elseif side == config.rightSide then
-        state.rightStage = state.rightStage + 1
-        if state.rightStage > config.crystalMaxStage then
-            state.rightStage = config.crystalMaxStage
-        end
-        log("Right crystal grew to stage " .. state.rightStage)
+    end
+    
+    -- Right crystal
+    if rightSig then
+        state.rightStage = clamp(state.rightStage + 1, config.crystalMaxStage)
+        log("Right crystal: Stage " .. state.rightStage)
         changed = true
-    elseif side == config.mainSide then
-        state.mainStage = state.mainStage + 1
-        if state.mainStage > config.mainMaxStage then
-            state.mainStage = config.mainMaxStage
-        end
-        log("Main block grew to stage " .. state.mainStage)
+    end
+    
+    -- Main block
+    if mainSig then
+        state.mainStage = clamp(state.mainStage + 1, config.mainMaxStage)
+        log("Main block: Stage " .. state.mainStage)
         changed = true
     end
     
@@ -102,14 +115,14 @@ local function main()
     updateDisplay()
     
     term.setCursorPos(1, 17)
-    write("Waiting for observer pulses...")
+    write("Monitoring relay: " .. config.relayName)
     
     while true do
         -- Wait for redstone event (observer pulse)
-        local event, side = os.pullEvent("redstone")
+        local event = os.pullEvent("redstone")
         
-        -- Check if this side has an observer
-        local changed = handleRedstoneChange(side)
+        -- Check relay inputs
+        local changed = handleRedstoneChange()
         
         -- Update display if something changed
         if changed then

@@ -3,10 +3,13 @@
 
 local config = {}
 
--- Redstone sides for observers
-config.leftSide = "left"      -- Side for left crystal observer
-config.rightSide = "right"    -- Side for right crystal observer
-config.mainSide = "top"       -- Side for main certus quartz block observer
+-- Redstone relay peripheral
+config.relayName = "redstone_relay_8"  -- Name of the redstone relay peripheral
+
+-- Relay input sides for observers
+config.leftSide = "left"      -- Relay side for left crystal observer
+config.rightSide = "right"    -- Relay side for right crystal observer
+config.mainSide = "top"       -- Relay side for main certus quartz block observer
 
 -- Growth stages
 config.crystalMaxStage = 4    -- Max growth stage for left/right crystals (1-4)
