@@ -14,20 +14,32 @@ end
 -- Open communication channel
 modem.open(1)
 
--- Function to empty inventory into hopper
+-- Function to empty inventory into hopper behind
 local function emptyInventory()
-    -- Transfer all items to hopper below
+    -- Get the turtle's own inventory peripheral name
+    local turtleName = peripheral.getName(turtle)
+    
+    -- Wrap the hopper behind the turtle
+    local hopper = peripheral.wrap("back")
+    
+    if not hopper then
+        print("Warning: No hopper found behind turtle")
+        return false
+    end
+    
+    -- Push all items from turtle into hopper inventory
     for slot = 1, 16 do
-        turtle.select(slot)
         if turtle.getItemCount(slot) > 0 then
-            -- Drop items down into hopper inventory
-            local dropped = turtle.dropDown()
-            if not dropped then
-                print("Warning: Could not drop slot " .. slot)
+            -- Use hopper.pullItems to pull from turtle into hopper
+            local pulled = hopper.pullItems(turtleName, slot)
+            if pulled == 0 then
+                print("Warning: Could not transfer slot " .. slot)
             end
         end
     end
+    
     turtle.select(1)  -- Reset to slot 1
+    return true
 end
 
 -- Function to break block above
