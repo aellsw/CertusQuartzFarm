@@ -10,6 +10,13 @@ if not relay then
     error("Could not wrap relay: " .. config.relayName)
 end
 
+-- Wrap the wireless modem
+local modem = peripheral.wrap(config.modemSide)
+if not modem then
+    error("Could not wrap modem on side: " .. config.modemSide)
+end
+modem.open(1)  -- Open channel 1 for communication
+
 -- State tracking
 local state = {
     leftStage = 0,
@@ -74,6 +81,29 @@ local function clamp(n, max)
     return math.min(max, math.max(0, n))
 end
 
+-- Function to send break command to turtle
+local function breakTurtle(turtleID, crystalName)
+    modem.transmit(1, 1, {command = "break", id = turtleID})
+    log(crystalName .. " turtle breaking...")
+end
+
+-- Function to break all crystals
+local function breakAll()
+    log("Breaking sides first...")
+    -- Break left and right simultaneously
+    breakTurtle(config.leftTurtleID, "Left")
+    breakTurtle(config.rightTurtleID, "Right")
+    
+    -- Wait a moment, then break main
+    sleep(config.mainBreakDelay)
+    breakTurtle(config.mainTurtleID, "Main")
+    
+    -- Reset stages
+    state.leftStage = 0
+    state.rightStage = 0
+    state.mainStage = 0
+end
+
 -- Function to handle redstone events (observer pulses)
 local function handleRedstoneChange()
     local changed = false
@@ -88,6 +118,12 @@ local function handleRedstoneChange()
         state.leftStage = clamp(state.leftStage + 1, config.crystalMaxStage)
         log("Left crystal: Stage " .. state.leftStage)
         changed = true
+        
+        -- Break if max stage reached
+        if state.leftStage == config.crystalMaxStage then
+            breakTurtle(config.leftTurtleID, "Left")
+            state.leftStage = 0
+        end
     end
     
     -- Right crystal
@@ -95,6 +131,12 @@ local function handleRedstoneChange()
         state.rightStage = clamp(state.rightStage + 1, config.crystalMaxStage)
         log("Right crystal: Stage " .. state.rightStage)
         changed = true
+        
+        -- Break if max stage reached
+        if state.rightStage == config.crystalMaxStage then
+            breakTurtle(config.rightTurtleID, "Right")
+            state.rightStage = 0
+        end
     end
     
     -- Main block
@@ -102,6 +144,12 @@ local function handleRedstoneChange()
         state.mainStage = clamp(state.mainStage + 1, config.mainMaxStage)
         log("Main block: Stage " .. state.mainStage)
         changed = true
+        
+        -- Break if max stage reached
+        if state.mainStage == config.mainMaxStage then
+            breakTurtle(config.mainTurtleID, "Main")
+            state.mainStage = 0
+        end
     end
     
     return changed

@@ -17,23 +17,41 @@ A CC:Tweaked program for monitoring Certus Quartz crystal growth in Applied Ener
 - Minecraft 1.20.1
 - Applied Energistics 2 mod
 - CC:Tweaked mod
-- A CC:Tweaked computer with redstone connectivity
+- A CC:Tweaked computer with:
+  - Redstone Relay #8 for observers
+  - Wireless modem (on back)
+- 3 Mining Turtles with wireless modems:
+  - Turtle #5 (right crystal)
+  - Turtle #6 (main block)
+  - Turtle #7 (left crystal)
 
 ## Installation
 
-### Quick Install (On CC:Tweaked Computer)
+### Computer Setup
 
-1. Run this command on your CC:Tweaked computer:
-   ```lua
-   pastebin run <code>
-   ```
-   Or download the installer:
+1. Run this on your CC:Tweaked computer:
    ```lua
    wget https://raw.githubusercontent.com/aellsw/CertusQuartzFarm/main/install.lua install.lua
    install
    ```
 
-2. The installer will download all necessary files automatically
+2. Edit `config.lua` if your turtle IDs are different
+
+3. Run the monitor:
+   ```lua
+   main
+   ```
+
+### Turtle Setup
+
+Run this on **each** of your 3 mining turtles:
+
+```lua
+wget https://raw.githubusercontent.com/aellsw/CertusQuartzFarm/main/install-turtle.lua install-turtle.lua
+install-turtle
+```
+
+The turtle will automatically start listening for break commands on reboot.
 
 ### Manual Install
 
@@ -46,17 +64,22 @@ A CC:Tweaked program for monitoring Certus Quartz crystal growth in Applied Ener
 Edit `config.lua` to customize your farm:
 
 ```lua
--- Redstone sides for observers
-config.leftSide = "left"      -- Side for left crystal observer
-config.rightSide = "right"    -- Side for right crystal observer
-config.mainSide = "back"      -- Side for main certus quartz block observer
+-- Redstone relay
+config.relayName = "redstone_relay_8"
+
+-- Relay input sides
+config.leftSide = "left"
+config.rightSide = "right"
+config.mainSide = "top"
+
+-- Turtle IDs
+config.leftTurtleID = 7
+config.rightTurtleID = 5
+config.mainTurtleID = 6
 
 -- Growth stages
-config.crystalMaxStage = 4    -- Max growth stage for left/right crystals
-config.mainMaxStage = 3       -- Max growth stage for main certus block
-
--- Detection settings
-config.checkInterval = 1      -- How often to check (in seconds)
+config.crystalMaxStage = 4    -- Left/right crystals
+config.mainMaxStage = 3       -- Main block
 ```
 
 ## Usage
@@ -71,7 +94,12 @@ config.checkInterval = 1      -- How often to check (in seconds)
 
 ## How It Works
 
-The program monitors redstone signals from observers watching your Certus Quartz crystals. As the crystals grow through different stages, the observers output redstone signals that the program detects and displays.
+1. Observers detect crystal growth and pulse the redstone relay
+2. The computer counts pulses to track growth stages
+3. When crystals reach max stage:
+   - Computer sends wireless command to corresponding turtle
+   - Turtle breaks the crystal/block above it
+   - Stage counter resets and growth starts again
 
 ## Troubleshooting
 

@@ -15,6 +15,15 @@ config.mainSide = "top"       -- Relay side for main certus quartz block observe
 config.crystalMaxStage = 4    -- Max growth stage for left/right crystals (1-4)
 config.mainMaxStage = 3       -- Max growth stage for main certus block (1-3)
 
+-- Wireless modem settings
+config.modemSide = "back"     -- Side where wireless modem is attached
+config.leftTurtleID = 7       -- Computer ID of left turtle
+config.rightTurtleID = 5      -- Computer ID of right turtle  
+config.mainTurtleID = 6       -- Computer ID of main block turtle
+
+-- Breaking settings
+config.mainBreakDelay = 0.5   -- Delay before breaking main (let sides break first)
+
 -- Detection settings
 config.enableLogging = true   -- Enable detailed logging
 config.displayUpdates = true  -- Show growth stage updates on screen

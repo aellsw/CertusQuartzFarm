@@ -7,6 +7,11 @@ local FILES = {
     "main.lua"
 }
 
+local TURTLE_FILES = {
+    "turtle.lua",
+    "install-turtle.lua"
+}
+
 -- Function to download a file from GitHub
 local function downloadFile(filename)
     print("Downloading " .. filename .. "...")
