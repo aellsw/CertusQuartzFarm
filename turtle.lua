@@ -14,6 +14,18 @@ end
 -- Open communication channel
 modem.open(1)
 
+-- Function to empty inventory into hopper behind
+local function emptyInventory()
+    -- Drop all items into hopper behind turtle
+    for slot = 1, 16 do
+        turtle.select(slot)
+        if turtle.getItemCount(slot) > 0 then
+            turtle.dropDown()  -- Drop down into hopper
+        end
+    end
+    turtle.select(1)  -- Reset to slot 1
+end
+
 -- Function to break block above
 local function breakBlockAbove()
     print("Breaking block above...")
@@ -23,6 +35,9 @@ local function breakBlockAbove()
     
     if success then
         print("Successfully broke block!")
+        -- Empty inventory into hopper
+        emptyInventory()
+        print("Emptied inventory into hopper")
     else
         print("Failed to break: " .. (reason or "unknown"))
     end

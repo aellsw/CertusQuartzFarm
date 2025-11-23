@@ -172,7 +172,35 @@ local function main()
     updateDisplay()
     
     term.setCursorPos(1, 17)
+    write("Starting up...")
+    
+    -- Startup: Break all crystals to sync state
+    print("")
+    print("Breaking all to sync state...")
+    sleep(0.5)  -- Give relays time to initialize
+    
+    -- Break left and right first (in case they're full)
+    log("Breaking side crystals...")
+    breakTurtle(config.leftTurtleID, "Left")
+    breakTurtle(config.rightTurtleID, "Right")
+    sleep(config.mainBreakDelay)
+    
+    -- Then break main
+    log("Breaking main block...")
+    breakTurtle(config.mainTurtleID, "Main")
+    sleep(0.5)  -- Wait for breaks to complete
+    
+    -- Reset all stages and set ignore flag
+    state.leftStage = 0
+    state.rightStage = 0
+    state.mainStage = 0
+    state.ignoreNextMainPulse = true  -- Ignore the placement pulse
+    
+    updateDisplay()
+    term.setCursorPos(1, 17)
     write("Monitoring relay: " .. config.relayName)
+    print("")
+    log("Startup complete - monitoring...")
     
     while true do
         -- Wait for redstone event (observer pulse)
