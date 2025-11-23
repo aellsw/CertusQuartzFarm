@@ -16,9 +16,6 @@ modem.open(1)
 
 -- Function to empty inventory into hopper behind
 local function emptyInventory()
-    -- Get the turtle's own inventory peripheral name
-    local turtleName = peripheral.getName(turtle)
-    
     -- Wrap the hopper behind the turtle
     local hopper = peripheral.wrap("back")
     
@@ -26,6 +23,9 @@ local function emptyInventory()
         print("Warning: No hopper found behind turtle")
         return false
     end
+    
+    -- Get turtle's peripheral name (the turtle itself)
+    local turtleName = "turtle_" .. os.getComputerID()
     
     -- Push all items from turtle into hopper inventory
     for slot = 1, 16 do
