@@ -21,7 +21,8 @@ modem.open(1)  -- Open channel 1 for communication
 local state = {
     leftStage = 0,
     rightStage = 0,
-    mainStage = 0
+    mainStage = 0,
+    ignoreNextMainPulse = false  -- Ignore first pulse when new block placed
 }
 
 -- Function to log messages
@@ -141,14 +142,22 @@ local function handleRedstoneChange()
     
     -- Main block
     if mainSig then
-        state.mainStage = clamp(state.mainStage + 1, config.mainMaxStage)
-        log("Main block: Stage " .. state.mainStage)
-        changed = true
-        
-        -- Break if max stage reached
-        if state.mainStage == config.mainMaxStage then
-            breakTurtle(config.mainTurtleID, "Main")
-            state.mainStage = 0
+        -- Check if we should ignore this pulse (new block placed)
+        if state.ignoreNextMainPulse then
+            state.ignoreNextMainPulse = false
+            log("Main block: Ignoring placement pulse")
+            changed = true
+        else
+            state.mainStage = clamp(state.mainStage + 1, config.mainMaxStage)
+            log("Main block: Stage " .. state.mainStage)
+            changed = true
+            
+            -- Break if max stage reached
+            if state.mainStage == config.mainMaxStage then
+                breakTurtle(config.mainTurtleID, "Main")
+                state.mainStage = 0
+                state.ignoreNextMainPulse = true  -- Ignore next pulse (new block placement)
+            end
         end
     end
     
