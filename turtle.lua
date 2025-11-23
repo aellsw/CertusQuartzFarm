@@ -3,46 +3,40 @@
 
 -- Configuration
 local MY_ID = os.getComputerID()
-local MODEM_SIDE = "back"  -- Side where wireless modem is attached
 
--- Wrap the wireless modem
-local modem = peripheral.find("modem")
+-- Find and open wireless modem
+local modem = peripheral.find("modem", function(name, wrapped)
+    return wrapped.isWireless()
+end)
+
 if not modem then
-    error("No modem found! Please attach a wireless modem.")
+    error("No wireless modem found! Please attach a wireless modem.")
 end
 
 -- Open communication channel
 modem.open(1)
 
--- Function to empty inventory into chest
+-- Function to empty inventory into chest behind
 local function emptyInventory()
-    -- Try to find and drop into chest on any side
+    -- Turn around to face chest
+    turtle.turnRight()
+    turtle.turnRight()
+    
+    -- Drop all items into chest behind
     for slot = 1, 16 do
+        turtle.select(slot)
         if turtle.getItemCount(slot) > 0 then
-            turtle.select(slot)
-            
-            -- Try each direction to find a chest
-            if not turtle.drop() then      -- front
-                if not turtle.dropUp() then    -- up
-                    if not turtle.dropDown() then  -- down
-                        turtle.turnLeft()
-                        if not turtle.drop() then  -- left side
-                            turtle.turnRight()
-                            turtle.turnRight()
-                            if not turtle.drop() then  -- right side
-                                turtle.turnLeft()  -- face forward again
-                                print("Warning: No chest found for slot " .. slot)
-                            else
-                                turtle.turnLeft()  -- face forward again
-                            end
-                        else
-                            turtle.turnRight()  -- face forward again
-                        end
-                    end
-                end
+            local success = turtle.drop()
+            if not success then
+                print("Warning: Could not drop slot " .. slot)
             end
         end
     end
+    
+    -- Turn back around to face forward
+    turtle.turnRight()
+    turtle.turnRight()
+    
     turtle.select(1)  -- Reset to slot 1
 end
 
