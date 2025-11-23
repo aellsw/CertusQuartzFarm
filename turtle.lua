@@ -14,13 +14,33 @@ end
 -- Open communication channel
 modem.open(1)
 
--- Function to empty inventory into chest/hopper behind
+-- Function to empty inventory into chest
 local function emptyInventory()
-    -- Drop all items into chest/hopper behind turtle
+    -- Try to find and drop into chest on any side
     for slot = 1, 16 do
-        turtle.select(slot)
         if turtle.getItemCount(slot) > 0 then
-            turtle.drop()  -- Drop into chest/hopper behind
+            turtle.select(slot)
+            
+            -- Try each direction to find a chest
+            if not turtle.drop() then      -- front
+                if not turtle.dropUp() then    -- up
+                    if not turtle.dropDown() then  -- down
+                        turtle.turnLeft()
+                        if not turtle.drop() then  -- left side
+                            turtle.turnRight()
+                            turtle.turnRight()
+                            if not turtle.drop() then  -- right side
+                                turtle.turnLeft()  -- face forward again
+                                print("Warning: No chest found for slot " .. slot)
+                            else
+                                turtle.turnLeft()  -- face forward again
+                            end
+                        else
+                            turtle.turnRight()  -- face forward again
+                        end
+                    end
+                end
+            end
         end
     end
     turtle.select(1)  -- Reset to slot 1
