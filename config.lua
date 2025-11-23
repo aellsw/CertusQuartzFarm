@@ -6,7 +6,7 @@ local config = {}
 -- Redstone sides for observers
 config.leftSide = "left"      -- Side for left crystal observer
 config.rightSide = "right"    -- Side for right crystal observer
-config.mainSide = "back"      -- Side for main certus quartz block observer
+config.mainSide = "top"       -- Side for main certus quartz block observer
 
 -- Growth stages
 config.crystalMaxStage = 4    -- Max growth stage for left/right crystals (1-4)
